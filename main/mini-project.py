@@ -16,6 +16,7 @@
 
 import csv
 order_status = ["Preparing", "Out for Delivery", "Complete"]
+cust_cart = []
 cust_dict = {}
 order_list = []
 product_list = ["Apple", "Sandwhich", "Coffee", "Tea", "Chocolate Cake", "Cheese Cake", "Orange"] # list of products
@@ -116,7 +117,7 @@ def product_menu():
         
 def order_menu():
     print('')
-    print('############## Order Menu ##############')
+    print('############# Order Menu ###############')
     print('#                                      #')
     print('#            1  Print Orders           #')
     print('#            2  Create Order           #')
@@ -170,29 +171,8 @@ def order_menu():
         print([list((i, order_list[i]))for i in range(len(order_list))])
         print('Enter below the order to remove.')
         order_del = int(input(''))
-        order_list.remove[order_del]
+        print(order_del)
+        order_list.remove(order_list[order_del])
         order_menu()
     elif option == 0:
         main_menu()
-        
-def courier_menu():
-    print('')
-    print('############# Courier Menu #############')
-    print('#                                      #')
-    print('#            1  List Products          #')
-    print('#            2  Add New Product        #')
-    print('#            3  Remove Product         #')
-    print('#            4  Update Product         #')
-    print('#                                      #')
-    print('########################################')    # courier page def block
-    print('#                                      #')
-    print('#           0   Main Menu              #')
-    print('#                                      #')
-    print('########################################')
-    print('')
-    print('Enter option below.')
-    option = int(input(''))
-    print('')
-    print(f'You entered option {option}')  # user inputs option
-
-main_menu() # run main menu function
