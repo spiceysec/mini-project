@@ -176,3 +176,4 @@ def order_menu():
         order_menu()
     elif option == 0:
         main_menu()
+main_menu()
