@@ -16,10 +16,13 @@
 
 import csv
 order_status = ["Preparing", "Out for Delivery", "Complete"]
+courier_list = ["1", "2"]
 cust_cart = []
 cust_dict = {}
 order_list = []
 product_list = ["Apple", "Sandwhich", "Coffee", "Tea", "Chocolate Cake", "Cheese Cake", "Orange"] # list of products
+couriers_data_file = open("../exports/courier_list.txt", "r")
+couriers_data = couriers_data_file.read()
 with open('../exports/product_list.csv') as f: # open product_list.csv and create variable for it
         reader = csv.reader(f) # create read varaible using csv import function with file
         product_list = list(reader) # set variable product_list as the variable to call when displaying the data in that file
@@ -48,14 +51,18 @@ def main_menu():
     elif option == 2: # if option is to look at couriers
         order_menu()
         pass
-    elif option == 5: # if option is to update order status
-        #oder_log_menu()
+    elif option == 3: # if option is to update order status
+        courier_menu()
         pass
     elif option == 0:
-        output_file = open('../exports/product_list.csv', 'w+') # exports a file called product_list.csv to exports folder, makes the file if there isnt already a csv file
-        datawriter = csv.writer(output_file) # uses data writer function from csv import to output the file
+        product_output_file = open('../exports/product_list.csv', 'w+') # exports a file called product_list.csv to exports folder, makes the file if there isnt already a csv file
+        datawriter = csv.writer(product_output_file) # uses data writer function from csv import to output the file
         datawriter.writerow(product_list) # uses product_list variable to grab list and write to the file, using  witerow instead of writerows
-        output_file.close() # closes the file after writing
+        product_output_file.close()
+        courier_output_file = open('../exports/courier_list.txt', 'w+')
+        for lines in courier_list:
+            courier_output_file.write("%s\n" %lines)
+        courier_output_file.close()
         print('Programme exporting to files...') # print to user that the programme is exporting changed data to a file
         print('Programme Closing...') # print to user that programme is closing
         print('')
@@ -149,7 +156,7 @@ def order_menu():
             print('Place order  Y / N')
             validate = input('')
             if validate == 'y':
-                cust_dict = {'Name' :cust_name, 'Address' : cust_addr, 'Number' : cust_phone, 'status' : order_status[0]}
+                cust_dict = {'Name' :cust_name, 'Address' : cust_addr, 'Number' : cust_phone, 'Courier' : courier,'status' : order_status[0]}
                 order_list.append(cust_dict)
             else:
                 order_menu()
@@ -176,4 +183,52 @@ def order_menu():
         order_menu()
     elif option == 0:
         main_menu()
+        
+def courier_menu():
+    print('')
+    print('############# Courier Menu #############')
+    print('#                                      #')
+    print('#            1  Print Couriers         #')
+    print('#            2  Add Courier            #')
+    print('#            3  Update Courier         #')
+    print('#            4  Remove Courier         #')
+    print('#                                      #')
+    print('########################################')    # courier log page def block
+    print('#                                      #')
+    print('#           0   Main Menu              #')
+    print('#                                      #')
+    print('########################################')
+    print('')
+    print('Enter option below.')
+    option = int(input(''))
+    print('')
+    print(f'You entered option {option}')  # user inputs option
+    print('')
+    if option == 1:
+        print(courier_list)
+        courier_menu()
+    elif option == 2:
+        list_add_courier = input('Enter courier to add: ')
+        print(list_add_courier)
+        courier_list.append(list_add_courier)
+        print(courier_list)
+        courier_menu()
+    elif option == 3:
+        print(courier_list) # print product list
+        update_in_list = input('Enter a courier to update: ')
+        update_value = input('Enter a courier to update it with: ')
+        courier_list.remove(str(update_in_list))
+        courier_list.append(update_value)
+        courier_menu()
+    elif option == 4:
+        print([list((i, courier_list[i]))for i in range(len(courier_list))])
+        print('Enter below the courier to remove.')
+        courier_del = int(input(''))
+        courier_list.remove(courier_list[courier_del])
+        courier_menu()
+    elif option == 0:
+        main_menu()
+    else:
+        print('You entered an invalid option.')
+        courier_menu()
 main_menu()
