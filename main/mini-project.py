@@ -16,16 +16,17 @@
 
 import csv
 order_status = ["Preparing", "Out for Delivery", "Complete"]
-courier_list = ["1", "2"]
 cust_cart = []
 cust_dict = {}
 order_list = []
-product_list = ["Apple", "Sandwhich", "Coffee", "Tea", "Chocolate Cake", "Cheese Cake", "Orange"] # list of products
-couriers_data_file = open("../exports/courier_list.txt", "r")
-couriers_data = couriers_data_file.read()
+with open('../exports/courier_list.csv') as b: # open product_list.csv and create variable for it
+        reader = csv.DictReader(b) # create read varaible using csv import function with file
+        courier_list = dict(reader)
 with open('../exports/product_list.csv') as f: # open product_list.csv and create variable for it
-        reader = csv.reader(f) # create read varaible using csv import function with file
-        product_list = list(reader) # set variable product_list as the variable to call when displaying the data in that file
+        reader = csv.DictReader(f) # create read varaible using csv import function with file
+        product_list = dict(reader) # set variable product_list as the variable to call when displaying the data in that file
+product_list = [{"Name":"Coffee","Price":0.85}, {"Name":"Tea","Price":0.85}, {"Name":"Orange Juice","Price":0.85}];# list of products
+courier_list = [{"Name" : "John", "Phone" : "69696969696"} ]
 
 def main_menu():
     print('')
@@ -59,9 +60,9 @@ def main_menu():
         datawriter = csv.writer(product_output_file) # uses data writer function from csv import to output the file
         datawriter.writerow(product_list) # uses product_list variable to grab list and write to the file, using  witerow instead of writerows
         product_output_file.close()
-        courier_output_file = open('../exports/courier_list.txt', 'w+')
-        for lines in courier_list:
-            courier_output_file.write("%s\n" %lines)
+        courier_output_file = open('../exports/courier_list.csv', 'w+')
+        datawriter = csv.writer(courier_output_file)
+        datawriter.writerow(courier_list)
         courier_output_file.close()
         print('Programme exporting to files...') # print to user that the programme is exporting changed data to a file
         print('Programme Closing...') # print to user that programme is closing
@@ -97,23 +98,37 @@ def product_menu():
         print(product_list)   # print all items in list
         product_menu()    # go back to products page
     elif option == 2:   # if option is equal to the input of 2
+        print(product_list)
         list_add_product = input('Enter Product: ') # input from user with name of product to add to list
-        print(list_add_product)     # print list (just to test)
-        product_list.append(list_add_product)
-        print(product_list) # prints product list
-        product_menu() # issue here, when adding something to list and this function is reloaded, the item in list is reset and no longer is appended
-    elif option == 3:   # if option is equal to the input of 2
-        print(product_list) # prints current list
-        list_del_product = input('Enter a product to delete: ') # user enteres the product from the list to remove from the list
-        product_list.remove(str(list_del_product)) # removes inputed product from user from the list
-        product_menu() # same issue as append section
-    elif option == 4: # if option is equal to the input 4
-        print(product_list) # print product list
-        update_in_list = input('Enter a product to update: ') # user to input a name of product to update
-        update_value = input('Enter a product to update it with: ') # user to input the product that is updated version
-        product_list.remove(str(update_in_list))
-        product_list.append(update_value)
+        list_add_product_price = input('Enter Product Price: ')
+        add_to_product_bit = {}
+        add_to_product_bit['Name'] = list_add_product
+        add_to_product_bit["Price"] = list_add_product_price
+        product_list.append(add_to_product_bit)
         product_menu()
+    elif option == 3:   # if option is equal to the input of 3
+        print([list((i, product_list[i]))for i in range(len(product_list))]) # prints current list
+        product_list_get_index = input('Enter product index Value: ')
+        print('WARNING: You are about to delete a product, continue? Y / N')
+        warning_input = input('')
+        if warning_input == "Y" or "y":
+            product_list.pop(int(product_list_get_index)) # removes inputed product from user from the list
+            product_menu() # same issue as append section
+        else:
+            product_menu()
+    elif option == 4: # if option is equal to the input 4
+        print([list((i, product_list[i]))for i in range(len(product_list))])
+        get_product_list_index = int(input('Enter Product index value: '))
+        list_add_product = input('Enter Product: ') # input from user with name of product to update in list
+        list_add_product_price = input('Enter Product Price: ')
+        print('WARNING: you are about to add a product, continue? Y / N')
+        warning_input = input('')
+        if warning_input == "Y" or "y":
+            product_list[get_product_list_index]['Name'] = list_add_product
+            product_list[get_product_list_index]["Price"] = list_add_product_price
+            product_menu()
+        else: 
+            product_menu()
     elif option == 0:   # if option is equal to the input of 0
         main_menu()   # go back to main menu
     else: # anything else inputted
@@ -153,10 +168,15 @@ def order_menu():
             cust_addr = input('')
             print('Enter phone number below.')
             cust_phone = input('')
+            print([list((i, product_list[i]))for i in range(len(product_list))])
+            cust_order = input('Enter products to add to oder with commas seperating the values: ')
+            cust_order = str(cust_order)
+            print([list((i, courier_list[i]))for i in range(len(courier_list))])
+            courier_select = input('Enter courier to use for order: ')
             print('Place order  Y / N')
             validate = input('')
             if validate == 'y':
-                cust_dict = {'Name' :cust_name, 'Address' : cust_addr, 'Number' : cust_phone, 'Courier' : courier,'status' : order_status[0]}
+                cust_dict = {'Name' :cust_name, 'Address' : cust_addr, 'Number' : cust_phone,'products' : cust_order, 'Courier' : courier_list[courier_select],'status' : order_status[0]}
                 order_list.append(cust_dict)
             else:
                 order_menu()
@@ -208,24 +228,42 @@ def courier_menu():
         print(courier_list)
         courier_menu()
     elif option == 2:
-        list_add_courier = input('Enter courier to add: ')
-        print(list_add_courier)
-        courier_list.append(list_add_courier)
-        print(courier_list)
-        courier_menu()
+        add_courier_name = input('Enter courier name: ')
+        add_courier_num = input('Enter courier number: ')
+        print('WARNING: you are about to add a courier, continue? Y / N')
+        warning_input = input('')
+        if warning_input == "Y" or "y":
+            add_to_courier_bit = {}
+            add_to_courier_bit['Name'] = add_courier_name
+            add_to_courier_bit["Phone"] = add_courier_num
+            courier_list.append(add_to_courier_bit)
+            print(courier_list)
+            courier_menu()
+        else: 
+            courier_menu()
     elif option == 3:
-        print(courier_list) # print product list
+        print([list((i, courier_list[i]))for i in range(len(courier_list))])
+        get_product_list_index = int(input('Enter Courier index value: '))
         update_in_list = input('Enter a courier to update: ')
         update_value = input('Enter a courier to update it with: ')
-        courier_list.remove(str(update_in_list))
-        courier_list.append(update_value)
-        courier_menu()
+        print('WARNING: you are about to add a courier, continue? Y / N')
+        warning_input = input('')
+        if warning_input == "Y" or "y":
+            courier_list[get_product_list_index]['Name'] = update_in_list
+            courier_list[get_product_list_index]["Phone"] = update_value
+            courier_menu()
+        else: 
+            courier_menu()
     elif option == 4:
-        print([list((i, courier_list[i]))for i in range(len(courier_list))])
-        print('Enter below the courier to remove.')
-        courier_del = int(input(''))
-        courier_list.remove(courier_list[courier_del])
-        courier_menu()
+        print([list((i, courier_list[i]))for i in range(len(courier_list))]) # prints current list
+        courier_list_get_index = input('Enter product index Value: ')
+        print('WARNING: You are about to delete a courier, continue? Y / N')
+        warning_input = input('')
+        if warning_input == "Y" or "y":
+            product_list.pop(int(courier_list_get_index)) # removes inputed product from user from the list
+            courier_menu() # same issue as append section
+        else:
+            courier_menu()
     elif option == 0:
         main_menu()
     else:
