@@ -14,18 +14,24 @@
 #                                                                                                              #
 ################################################################################################################
 
-import csv
-order_status = ["Preparing", "Out for Delivery", "Complete"]
-courier_list = ["1", "2"]
-cust_cart = []
-cust_dict = {}
-order_list = []
-product_list = ["Apple", "Sandwhich", "Coffee", "Tea", "Chocolate Cake", "Cheese Cake", "Orange"] # list of products
-couriers_data_file = open("../exports/courier_list.txt", "r")
-couriers_data = couriers_data_file.read()
-with open('../exports/product_list.csv') as f: # open product_list.csv and create variable for it
-        reader = csv.reader(f) # create read varaible using csv import function with file
-        product_list = list(reader) # set variable product_list as the variable to call when displaying the data in that file
+import pymysql
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+host = os.environ.get("mysql_host")
+user = os.environ.get("mysql_user")
+password = os.environ.get("mysql_pass")
+database = os.environ.get("mysql_db")
+
+connection = pymysql.connect(
+    host,
+    user,
+    password,
+    database
+)
+
+cursor = connection.cursor()
 
 def main_menu():
     print('')
@@ -46,31 +52,24 @@ def main_menu():
     print('')
     print(f'You entered option {option}')
 
-    if option == 1: # if option is to view products
+    if option == 1:
         product_menu()
-    elif option == 2: # if option is to look at couriers
+    elif option == 2: 
         order_menu()
         pass
-    elif option == 3: # if option is to update order status
+    elif option == 3: 
         courier_menu()
         pass
     elif option == 0:
-        product_output_file = open('../exports/product_list.csv', 'w+') # exports a file called product_list.csv to exports folder, makes the file if there isnt already a csv file
-        datawriter = csv.writer(product_output_file) # uses data writer function from csv import to output the file
-        datawriter.writerow(product_list) # uses product_list variable to grab list and write to the file, using  witerow instead of writerows
-        product_output_file.close()
-        courier_output_file = open('../exports/courier_list.txt', 'w+')
-        for lines in courier_list:
-            courier_output_file.write("%s\n" %lines)
-        courier_output_file.close()
-        print('Programme exporting to files...') # print to user that the programme is exporting changed data to a file
-        print('Programme Closing...') # print to user that programme is closing
+        cursor.close()
+        connection.close()
+        print('Programme exporting to files...') 
+        print('Programme Closing...') 
         print('')
-        exit() # exit the programme
-        
-    else: # anything else do this
+        exit() 
+    else: 
         print('')
-        print('Invalid Input. ') # print that the user has inputted an invalid option
+        print('Invalid Input. ') 
         print('')
         main_menu() # reopen the menu 
         
@@ -92,35 +91,62 @@ def product_menu():
     print('Enter option below.')
     option = int(input(''))
     print('')
-    print(f'You entered option {option}')   # user inputs option
-    if option == 1:   # if option is equal to the input of 1
-        print(product_list)   # print all items in list
-        product_menu()    # go back to products page
-    elif option == 2:   # if option is equal to the input of 2
-        list_add_product = input('Enter Product: ') # input from user with name of product to add to list
-        print(list_add_product)     # print list (just to test)
-        product_list.append(list_add_product)
-        print(product_list) # prints product list
-        product_menu() # issue here, when adding something to list and this function is reloaded, the item in list is reset and no longer is appended
-    elif option == 3:   # if option is equal to the input of 2
-        print(product_list) # prints current list
-        list_del_product = input('Enter a product to delete: ') # user enteres the product from the list to remove from the list
-        product_list.remove(str(list_del_product)) # removes inputed product from user from the list
-        product_menu() # same issue as append section
-    elif option == 4: # if option is equal to the input 4
-        print(product_list) # print product list
-        update_in_list = input('Enter a product to update: ') # user to input a name of product to update
-        update_value = input('Enter a product to update it with: ') # user to input the product that is updated version
-        product_list.remove(str(update_in_list))
-        product_list.append(update_value)
+    print(f'You entered option {option}')
+    print('')
+    if option == 1:
+        cursor.execute("SELECT product_name, product_price FROM product_table;")
+        for item in cursor:
+            print(item)
+        product_menu() 
+    elif option == 2: 
+        add_product_name = str(input('Enter a product name: '))
+        add_prod_price = float(input('Enter the products price : £'))
+        cursor.execute(f"INSERT INTO product_table(product_name, product_price) VALUES ('{add_product_name}','{add_prod_price}');")
+        warning_input = input('')
+        if warning_input.lower == "y":
+            connection.commit()
+        else:
+            product_menu()
         product_menu()
-    elif option == 0:   # if option is equal to the input of 0
-        main_menu()   # go back to main menu
-    else: # anything else inputted
+    elif option == 3:
+        cursor.execute("SELECT product_id, product_name FROM product_table;")
+        for item in cursor:
+            print(item)
+        select_id = input('Enter the ID you want to delete: ')
+        warning_input_1 = int(input('WARNING! Are you Sure? Y / N '))
+        if warning_input_1.lower() == "y":
+            cursor.execute("DELETE FROM product_table  WHERE product_id = '{select_id}';")
+            connection.commit()
+        else:
+            product_menu()
+        product_menu()
+    elif option == 4: 
+        cursor.execute("SELECT product_id, product_name FROM product_table;")
+        for item in cursor:
+            print(item)
+        get_product_id = int(input('Enter a product ID to edit: '))
+        print('Would you like to change the product name? Y / N')
+        warning_input_2 = input('')
+        if warning_input_2.lower() == "y":
+            print('Enter a new product name: ')
+            new_prod_name = str(input(''))
+            cursor.execute(f"UPDATE product_table SET product_name = '{new_prod_name}' WHERE product_id = '{get_product_id}';")
+        print('Would you like to change the product price? Y / N')
+        warning_input_2 = input('')
+        if warning_input_2.lower() == "y":
+            print('Enter a new price for product: ')
+            new_prod_price = float(input(''))
+            cursor.execute(f"UPDATE product_table SET product_price = '{new_prod_price}' WHERE product_id = '{get_product_id}';")
+            product_menu()
+        else: 
+            product_menu()
+    elif option == 0:   
+        main_menu() 
+    else: 
         print('') 
-        print('Invalid Input.') # print that the user has inputted an invalid option
+        print('Invalid Input.') 
         print('')
-        product_menu() # re run the product menu function
+        product_menu() 
         
 def order_menu():
     print('')
@@ -140,47 +166,97 @@ def order_menu():
     print('Enter option below.')
     option = int(input(''))
     print('')
-    print(f'You entered option {option}')  # user inputs option
+    print(f'You entered option {option}')  
     print('')
     if option == 1:
-        print(order_list)
-        order_menu()
+        cursor.execute("SELECT order_id, order_name, order_address, cust_num, order_products, order_status, courier_id FROM order_table;")
+        for item in cursor:
+            print(item)
     elif option == 2:
         for i in range(1):
-            print('Enter name below.')
-            cust_name = input('')
-            print('Enter address below.')
-            cust_addr = input('')
-            print('Enter phone number below.')
-            cust_phone = input('')
-            print('Place order  Y / N')
-            validate = input('')
-            if validate == 'y':
-                cust_dict = {'Name' :cust_name, 'Address' : cust_addr, 'Number' : cust_phone, 'Courier' : courier,'status' : order_status[0]}
-                order_list.append(cust_dict)
+            print('Enter order name below.')
+            order_name = input('')
+            print('Enter delivery address below.')
+            order_addr = input('')
+            print('Enter customer phone number below.')
+            order_phone = input('')
+            cursor.execute("SELECT product_id, product_name, product_price FROM product_table;")
+            for item in cursor:
+                print(item)
+            add_prods = input('Enter product IDs to add to oder with commas seperating the values: ')
+            cursor.execute("SELECT courier_id, courier_name FROM courier_table;")
+            for item in cursor:
+                print(item)
+            courier_select = input('Enter courier ID to use for order: ')
+            validate = input('Place order  Y / N')
+            if validate.lower == 'y':
+                cursor.execute(f"INSERT INTO order_table (order_name, order_address, order_num, order_products, order_status, courier_id) VALUES ('{order_name}', '{order_addr}', '{order_phone}', '{add_prods}', 1, '{courier_select}')")
+                connection.commit()
+                order_menu()
             else:
                 order_menu()
         order_menu()
     elif option == 3:
-        for x in range(1):
-            print([list((i, order_list[i]))for i in range(len(order_list))])
-            print('Input index value below to change.')
-            odiv = int(input(''))
-            print([list((i, order_status[i]))for i in range(len(order_status))])
-            print('0 = preparing, 1 = out for delivery, 2 = complete')
-            osiv = int(input(''))
-            order_list[odiv]['status'] = order_status[osiv]
-            order_menu()
+        cursor.execute("SELECT order_id, order_name, order_address, cust_num, order_products, order_status, courier_id FROM order_table;")
+        for item in cursor:
+            print(item)
+        get_order_id = int(input('Enter the order ID of the one you want to change: '))
+        print('Would you like to change the order name? Y / N')
+        warning_input_2 = input('')
+        if warning_input_2.lower() == "y":
+            print('Enter a new order name: ')
+            new_order_name = str(input(''))
+            cursor.execute(f"UPDATE order_table SET order_name = '{new_order_name}' WHERE order_id = '{get_order_id}';")
+        print('Would you like to change the order address? Y / N')
+        warning_input_2 = input('')
+        if warning_input_2.lower() == "y":
+            print('Enter a new address: ')
+            new_address_name = str(input(''))
+            cursor.execute(f"UPDATE order_table SET order_address = '{new_address_name}' WHERE order_id = '{get_order_id}';")
+        print('Would you like to change the customers number? Y / N')
+        warning_input_2 = input('')
+        if warning_input_2.lower() == "y":
+            print('Enter a number: ')
+            new_cust_num = int(input(''))
+            cursor.execute(f"UPDATE order_table SET cust_num = '{new_cust_num}' WHERE order_id = '{get_order_id}';")
+        print('Would you like to change the products in the order? Y / N')
+        warning_input_2 = input('')
+        if warning_input_2.lower() == "y":
+            cursor.execute("SELECT product_id, product_name FROM product_table;")
+            for item in cursor:
+                print(item)
+            new_products = str(input('Enter new products IDs seperated by commas: '))
+            cursor.execute(f"UPDATE order_table SET order_products = '{new_products}' WHERE order_id = '{get_order_id}';")
+        print('Would you like to change the order status? Y / N')
+        warning_input_2 = input('')
+        if warning_input_2.lower() == "y":
+            cursor.execute("SELECT status_id, statuses FROM status_table;")
+            for item in cursor:
+                print(item)
+            new_status_id = int(input('Enter the ID of a status: '))
+            cursor.execute(f"UPDATE order_table SET order_status = '{new_status_id}' WHERE order_id = '{get_order_id}';")
+        print('Would you like to change the courier? Y / N')
+        warning_input_2 = input('')
+        if warning_input_2.lower() == "y":
+            cursor.execute("SELECT courier_id, courier_name FROM courier_table;")
+            for item in cursor:
+                print(item)
+            new_courier_id = int(input('Enter the ID of a courier: '))
+            cursor.execute(f"UPDATE order_table SET coueir_id = '{new_courier_id}' WHERE order_id = '{get_order_id}';")
         else:
             order_menu()
         order_menu()
     elif option == 4:
-        print([list((i, order_list[i]))for i in range(len(order_list))])
-        print('Enter below the order to remove.')
-        order_del = int(input(''))
-        print(order_del)
-        order_list.remove(order_list[order_del])
-        order_menu()
+        cursor.execute("SELECT order_id, order_name, order_address, cust_num, order_products, order_status, courier_id FROM order_table;")
+        for item in cursor:
+            print(item)
+        select_order = int(input('Enter the order ID you want to delete: '))
+        warning_input = input('WARNING: are you sure you want to delete? Y / N')
+        if warning_input.lower == 'y':
+            cursor.execute(f"DELETE FROM order_table WHERE order_id = '{select_order}';")
+            order_menu()
+        else:
+            order_menu()
     elif option == 0:
         main_menu()
         
@@ -202,30 +278,59 @@ def courier_menu():
     print('Enter option below.')
     option = int(input(''))
     print('')
-    print(f'You entered option {option}')  # user inputs option
+    print(f'You entered option {option}')  
     print('')
     if option == 1:
-        print(courier_list)
+        cursor.execute("SELECT courier_name, courier_num FROM courier_table;")
+        for item in cursor:
+            print(item)
         courier_menu()
     elif option == 2:
-        list_add_courier = input('Enter courier to add: ')
-        print(list_add_courier)
-        courier_list.append(list_add_courier)
-        print(courier_list)
-        courier_menu()
+        add_courier_name = input('Enter courier name: ')
+        add_courier_num = input('Enter courier number: ')
+        print('WARNING: you are about to add a courier, continue? Y / N')
+        warning_input = input('')
+        if warning_input == "Y" or "y":
+            cursor.execute(f"INSERT INTO courier_table(courier_name, courier_num) VALUES ('{add_courier_name}','{add_courier_num}');")
+            connection.commit()
+            courier_menu()
+        else: 
+            courier_menu()
     elif option == 3:
-        print(courier_list) # print product list
-        update_in_list = input('Enter a courier to update: ')
-        update_value = input('Enter a courier to update it with: ')
-        courier_list.remove(str(update_in_list))
-        courier_list.append(update_value)
-        courier_menu()
+        cursor.execute("SELECT courier_id, courier_name FROM courier_table;")
+        for item in cursor:
+            print(item)
+        select_id = input('Enter the ID you want to edit: ')
+        warning_input_1 = int(input('Would you like to edit the name? Y / N '))
+        if warning_input_1.lower() == "y":
+            new_courier_name = str(input('Enter a name for the courier: '))
+            cursor.execute(f"UPDATE courier_table SET courier_name = '{new_courier_name}' WHERE courier_id = '{select_id}';")
+        print('Would you like to change the couriers phone number? Y / N')
+        warning_input_2 = input('')
+        if warning_input_2.lower() == "y":
+            print('Enter a new phone number for courier: ')
+            new_courier_num = int(input(''))
+            cursor.execute(f"UPDATE courier_table SET courier_num = '{new_courier_num}' WHERE courier_id = '{select_id}';")
+        else: 
+            courier_menu()
+        warning_input = input('WARNING: you are about to edit a courier, continue? Y / N ')
+        if warning_input.lower() == "y":
+            connection.commit()
+            courier_menu()
+        else: 
+            courier_menu()
     elif option == 4:
-        print([list((i, courier_list[i]))for i in range(len(courier_list))])
-        print('Enter below the courier to remove.')
-        courier_del = int(input(''))
-        courier_list.remove(courier_list[courier_del])
-        courier_menu()
+        cursor.execute("SELECT courier_id, courier_name FROM courier_table;")
+        for item in cursor:
+            print(item)
+        select_id = input('Enter the courier ID you want to delete: ')
+        warning_input_1 = int(input('WARNING! Are you Sure? Y / N '))
+        if warning_input_1.lower() == "y":
+            cursor.execute("DELETE FROM courier_table WHERE courier_id = '{select_id}';")
+            connection.commit()
+            courier_menu()
+        else:
+            courier_menu()
     elif option == 0:
         main_menu()
     else:
