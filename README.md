@@ -19,16 +19,14 @@
 
  ===================================================== Testing =====================================================
 
- The software has been through rigerous tests over and over again to ensure; invalid inputs, obscure and arbery 
- inputs are detected and delt with without breaking or causing issues, to ensure each function doesn't affect the 
- usability of the software and data cannot be reformed or obscured. Database quieries have also been tested to 
- protect again arbetry inputs to prevent sql injection. 
+ The software has been tested by mocking the sql connection.
 
  ============================================== Future Implementation ==============================================
 
  In future updates, a new, upgraded layout/design will be implamenteded making the software more like eye-candy and
  more friendly. Taking use of the TKinter libery would enhance the look and bring it further into the future and
- further improoving user experience.
+ further improoving user experience. Adding further input obvuscation so invalid user inputs cannot break certain
+ aspects of the programme.
 
  ======================================== What I enjoyed About This Project ========================================
 
