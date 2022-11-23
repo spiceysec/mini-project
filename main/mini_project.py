@@ -14,16 +14,19 @@
 #                                                                                                              #
 ################################################################################################################
 
+# modules imported
 import pymysql
 import os
 from dotenv import load_dotenv
 
+# load environment file and set variables for connection
 load_dotenv()
 host = os.environ.get("mysql_host")
 user = os.environ.get("mysql_user")
 password = os.environ.get("mysql_pass")
 database = os.environ.get("mysql_db")
 
+# set connection variable
 connection = pymysql.connect(
     host,
     user,
@@ -31,8 +34,10 @@ connection = pymysql.connect(
     database
 )
 
+# set cursor variable
 cursor = connection.cursor()
 
+# main menu function, access other menus, exit programme
 def main_menu():
     print('')
     print('############### Main Menu ##############')
@@ -72,7 +77,8 @@ def main_menu():
         print('Invalid Input. ') 
         print('')
         main_menu() # reopen the menu 
-        
+
+# product menu function list product, add product, update product, remove product
 def product_menu():
     print('')
     print('############# Product Menu #############')
@@ -147,7 +153,8 @@ def product_menu():
         print('Invalid Input.') 
         print('')
         product_menu() 
-        
+
+# order menu function list orders, add order, edit/update orders, remove order 
 def order_menu():
     print('')
     print('############# Order Menu ###############')
@@ -259,7 +266,8 @@ def order_menu():
             order_menu()
     elif option == 0:
         main_menu()
-        
+
+# courier manu function list couriers, add courier, update courier info, remove courier 
 def courier_menu():
     print('')
     print('############# Courier Menu #############')
@@ -336,4 +344,5 @@ def courier_menu():
     else:
         print('You entered an invalid option.')
         courier_menu()
+# call main menu function to run programme
 main_menu()
